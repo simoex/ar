@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Solar System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar-nft.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+        }
+
+        #loading.hidden {
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 1000;
+            max-width: 80%;
+        }
+
+        #status {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 150, 255, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            display: none;
+        }
+
+        #status.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <p>A carregar experiência AR...</p>
+        <p style="font-size: 12px; opacity: 0.7;">Aguarde alguns segundos</p>
+    </div>
+
+    <!-- Status Indicator -->
+    <div id="status">Marcador Detetado!</div>
+
+    <!-- Instructions -->
+    <div id="instructions">
+        Aponte a câmara para a imagem <strong>solar.jpg</strong>
+    </div>
+
+    <!-- A-Frame Scene -->
+    <a-scene
+        embedded
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; trackingMethod: best;"
+        vr-mode-ui="enabled: false"
+        renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true; alpha: true;"
+        loading-screen="enabled: false">
+
+        <!-- Assets -->
+        <a-assets>
+            <!-- Carregue seu modelo 3D aqui -->
+            <a-asset-item id="solarModel" src="solar.glb"></a-asset-item>
+        </a-assets>
+
+        <!-- Marcador de Imagem -->
+        <a-marker
+            type="pattern"
+            preset="custom"
+            url="solar.patt"
+            raycaster="objects: .clickable"
+            emitevents="true"
+            cursor="fuse: false; rayOrigin: mouse;"
+            id="markerA"
+            smooth="true"
+            smoothCount="10"
+            smoothTolerance="0.01"
+            smoothThreshold="5">
+
+            <!-- Modelo 3D Solar System -->
+            <a-entity
+                id="solarEntity"
+                gltf-model="#solarModel"
+                position="0 0 0"
+                scale="0.5 0.5 0.5"
+                rotation="0 0 0"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 20000; easing: linear">
+            </a-entity>
+
+            <!-- Luz Ambiente -->
+            <a-light
+                type="ambient"
+                color="#ffffff"
+                intensity="0.8">
+            </a-light>
+
+            <!-- Luz Direcional -->
+            <a-light
+                type="directional"
+                color="#ffffff"
+                intensity="1.2"
+                position="2 4 2">
+            </a-light>
+
+            <!-- Luz Pontual adicional -->
+            <a-light
+                type="point"
+                color="#ffffff"
+                intensity="0.5"
+                position="0 2 0">
+            </a-light>
+
+        </a-marker>
+
+        <!-- Câmara -->
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        // Elementos DOM
+        const loading = document.getElementById('loading');
+        const status = document.getElementById('status');
+        const marker = document.querySelector('#markerA');
+        const solarEntity = document.getElementById('solarEntity');
+
+        // Remover loading screen após carregamento
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                loading.classList.add('hidden');
+            }, 2000);
+        });
+
+        // Deteção do marcador
+        if (marker) {
+            marker.addEventListener('markerFound', () => {
+                console.log('Marcador encontrado!');
+                status.classList.add('active');
+                status.textContent = '✓ Marcador Detetado!';
+                
+                // Fade in do modelo
+                if (solarEntity) {
+                    solarEntity.setAttribute('visible', 'true');
+                }
+            });
+
+            marker.addEventListener('markerLost', () => {
+                console.log('Marcador perdido!');
+                status.classList.remove('active');
+                
+                // Fade out do modelo
+                if (solarEntity) {
+                    solarEntity.setAttribute('visible', 'false');
+                }
+            });
+        }
+
+        // Log de erros de carregamento do modelo
+        if (solarEntity) {
+            solarEntity.addEventListener('model-error', (e) => {
+                console.error('Erro ao carregar modelo:', e);
+                alert('Erro ao carregar o modelo 3D. Verifique se o arquivo solar.glb existe.');
+            });
+
+            solarEntity.addEventListener('model-loaded', () => {
+                console.log('Modelo 3D carregado com sucesso!');
+            });
+        }
+
+        // Tratamento de erros da câmara
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(() => {
+                console.log('Acesso à câmara concedido');
+            })
+            .catch((err) => {
+                console.error('Erro ao aceder à câmara:', err);
+                alert('Por favor, permita o acesso à câmara para utilizar a experiência AR.');
+            });
+    </script>
+</body>
+</html>
