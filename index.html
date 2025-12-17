@@ -95,7 +95,7 @@
     <!-- Cena A-Frame com AR.js -->
     <a-scene
         embedded
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; sourceWidth: 1280; sourceHeight: 960; displayWidth: 1280; displayHeight: 960; videoTexture: true;"
         vr-mode-ui="enabled: false"
         renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true; alpha: true;"
         loading-screen="enabled: false">
@@ -153,7 +153,10 @@
         </a-marker>
 
         <!-- Câmara -->
-        <a-entity camera look-controls="enabled: false"></a-entity>
+        <a-entity camera 
+                  look-controls="enabled: false"
+                  zoom="1"
+                  fov="80"></a-entity>
     </a-scene>
 
     <script>
@@ -212,7 +215,13 @@
         console.log('Procure pelo marcador solar.jpg ou use um QR code como alternativa');
         
         // Verificar permissões de câmara
-        navigator.mediaDevices.getUserMedia({ video: true })
+        navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: 'environment',
+                width: { ideal: 1280 },
+                height: { ideal: 960 }
+            } 
+        })
             .then(stream => {
                 console.log('Câmara autorizada');
                 stream.getTracks().forEach(track => track.stop());
