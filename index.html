@@ -3,20 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Solar System - ARCore</title>
-    <script src="https://unpkg.com/@google/model-viewer@3.3.0/dist/model-viewer.min.js" type="module"></script>
+    <title>AR Solar System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar-nft.js"></script>
     <style>
         body {
             margin: 0;
             overflow: hidden;
             font-family: Arial, sans-serif;
-            background: #000;
-        }
-        
-        model-viewer {
-            width: 100vw;
-            height: 100vh;
-            --poster-color: transparent;
         }
         
         #loading {
@@ -25,13 +19,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(0, 0, 0, 0.8);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
             color: white;
+            z-index: 9999;
         }
         
         #loading.hidden {
@@ -55,292 +49,179 @@
         
         #instructions {
             position: fixed;
-            bottom: 80px;
+            top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.7);
             color: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            z-index: 100;
+            padding: 15px 25px;
+            border-radius: 10px;
+            z-index: 1000;
             text-align: center;
-            max-width: 85%;
-            font-size: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            max-width: 80%;
         }
         
-        #instructions.hidden {
-            display: none;
-        }
-        
-        #ar-button {
+        #status {
             position: fixed;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 18px 40px;
-            border: none;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 101;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s ease;
-        }
-        
-        #ar-button:hover {
-            transform: translateX(-50%) scale(1.05);
-            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6);
-        }
-        
-        #ar-button:active {
-            transform: translateX(-50%) scale(0.98);
-        }
-        
-        #ar-button.hidden {
-            display: none;
-        }
-        
-        .controls {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 100;
-        }
-        
-        .control-btn {
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            transition: all 0.2s ease;
-        }
-        
-        .control-btn:hover {
-            transform: scale(1.1);
-            background: white;
-        }
-        
-        .control-btn:active {
-            transform: scale(0.95);
-        }
-        
-        #info {
-            position: fixed;
-            top: 20px;
-            left: 20px;
             background: rgba(0, 0, 0, 0.7);
             color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            font-size: 13px;
-            z-index: 100;
-            max-width: 250px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            font-size: 14px;
         }
         
-        #info.hidden {
-            display: none;
-        }
-        
-        .feature-badge {
-            display: inline-block;
-            background: rgba(102, 126, 234, 0.3);
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-size: 11px;
-            margin-top: 8px;
-            margin-right: 5px;
-        }
-        
-        #error {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(220, 53, 69, 0.95);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            max-width: 80%;
-            z-index: 1001;
-            display: none;
-        }
-        
-        #error.show {
-            display: block;
+        .status-active {
+            background: rgba(0, 150, 0, 0.8) !important;
         }
     </style>
 </head>
 <body>
     <div id="loading">
         <div class="spinner"></div>
-        <p style="font-size: 18px;">🚀 A carregar experiência AR...</p>
-        <p style="font-size: 12px; opacity: 0.7;">Preparando ARCore e modelo 3D</p>
+        <p>A carregar experiência AR...</p>
+        <p style="font-size: 12px;">Por favor, permita o acesso à câmara</p>
     </div>
     
     <div id="instructions">
-        <strong>📱 Modo AR Pronto!</strong>
-        <br>
-        <small>Toque no botão abaixo para iniciar a experiência AR</small>
+        📱 Aponte a câmara para a imagem "solar.jpg"
     </div>
     
-    <div id="info">
-        <strong>🌟 Sistema Solar AR</strong>
-        <div style="margin-top: 10px; font-size: 12px; opacity: 0.9;">
-            Powered by ARCore
-        </div>
-        <span class="feature-badge">✓ Deteção de superfícies</span>
-        <span class="feature-badge">✓ Iluminação realista</span>
-        <span class="feature-badge">✓ Escala real</span>
-    </div>
-    
-    <div id="error">
-        <h3 style="margin-top: 0;">⚠️ AR não disponível</h3>
-        <p id="error-message"></p>
-        <button onclick="location.reload()" style="margin-top: 15px; padding: 10px 25px; font-size: 14px; background: white; color: #dc3545; border: none; border-radius: 25px; cursor: pointer; font-weight: bold;">
-            Tentar novamente
-        </button>
-    </div>
+    <div id="status">Procurando marcador...</div>
 
-    <model-viewer
-        id="solar-viewer"
-        src="solar.glb"
-        ar
-        ar-modes="webxr scene-viewer quick-look"
-        camera-controls
-        touch-action="pan-y"
-        shadow-intensity="1"
-        shadow-softness="0.5"
-        exposure="1"
-        auto-rotate
-        auto-rotate-delay="1000"
-        rotation-per-second="30deg"
-        interaction-prompt="none"
-        ar-scale="auto"
-        environment-image="neutral"
-        skybox-image=""
-        alt="Modelo 3D do Sistema Solar">
+    <!-- Cena A-Frame com AR.js -->
+    <a-scene
+        embedded
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        vr-mode-ui="enabled: false"
+        renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true; alpha: true;"
+        loading-screen="enabled: false">
         
-        <button slot="ar-button" id="ar-button">
-            🚀 Iniciar AR
-        </button>
+        <!-- Assets -->
+        <a-assets>
+            <!-- Modelo 3D -->
+            <a-asset-item id="solarModel" src="solar.glb"></a-asset-item>
+            
+            <!-- Marcador de imagem -->
+            <img id="solarMarker" src="solar.jpg" crossorigin="anonymous">
+        </a-assets>
         
-        <div class="controls" slot="default">
-            <button class="control-btn" id="rotate-btn" title="Rotação automática">🔄</button>
-            <button class="control-btn" id="reset-btn" title="Resetar vista">🎯</button>
-        </div>
-    </model-viewer>
+        <!-- Marcador AR baseado em imagem -->
+        <a-marker
+            type="pattern"
+            preset="custom"
+            url="solar.patt"
+            smooth="true"
+            smoothCount="10"
+            smoothTolerance="0.01"
+            smoothThreshold="5"
+            raycaster="objects: .clickable"
+            emitevents="true"
+            cursor="fuse: false; rayOrigin: mouse;"
+            id="markerA">
+            
+            <!-- Grupo principal do modelo -->
+            <a-entity id="model-container" position="0 0 0" rotation="0 0 0" scale="1 1 1">
+                <!-- Modelo 3D -->
+                <a-entity
+                    gltf-model="#solarModel"
+                    position="0 0 0"
+                    rotation="-90 0 0"
+                    scale="1 1 1"
+                    animation-mixer="clip: *; loop: repeat; repetitions: Infinity"
+                    shadow="cast: true; receive: true">
+                </a-entity>
+                
+                <!-- Iluminação ambiente -->
+                <a-entity light="type: ambient; color: #BBB; intensity: 0.8"></a-entity>
+                
+                <!-- Luz direcional principal -->
+                <a-entity light="type: directional; color: #FFF; intensity: 1.2; castShadow: true" 
+                          position="2 4 2"></a-entity>
+                
+                <!-- Luz de preenchimento -->
+                <a-entity light="type: point; color: #FFF; intensity: 0.5; distance: 10; decay: 2" 
+                          position="-2 2 2"></a-entity>
+                
+                <!-- Luz traseira suave -->
+                <a-entity light="type: point; color: #88CCFF; intensity: 0.3; distance: 10" 
+                          position="0 2 -2"></a-entity>
+            </a-entity>
+        </a-marker>
+
+        <!-- Câmara -->
+        <a-entity camera look-controls="enabled: false"></a-entity>
+    </a-scene>
 
     <script>
-        const modelViewer = document.querySelector('#solar-viewer');
+        // Gestão da interface
         const loadingEl = document.getElementById('loading');
+        const statusEl = document.getElementById('status');
         const instructionsEl = document.getElementById('instructions');
-        const infoEl = document.getElementById('info');
-        const errorEl = document.getElementById('error');
-        const errorMessageEl = document.getElementById('error-message');
-        const rotateBtn = document.getElementById('rotate-btn');
-        const resetBtn = document.getElementById('reset-btn');
         
-        let autoRotateEnabled = true;
-
-        // Verificar suporte para AR
-        function checkARSupport() {
-            if (!modelViewer.canActivateAR) {
-                console.warn('AR não suportado neste dispositivo');
-                showError('Este dispositivo não suporta ARCore. Necessita de um dispositivo Android compatível com ARCore ou iOS com AR Quick Look.');
-                return false;
-            }
-            return true;
-        }
-
-        // Mostrar erro
-        function showError(message) {
-            errorMessageEl.textContent = message;
-            errorEl.classList.add('show');
+        // Ocultar loading após inicialização
+        setTimeout(() => {
             loadingEl.classList.add('hidden');
-        }
-
-        // Quando o modelo carregar
-        modelViewer.addEventListener('load', () => {
-            console.log('Modelo 3D carregado com sucesso');
-            loadingEl.classList.add('hidden');
-            
-            if (checkARSupport()) {
-                instructionsEl.classList.remove('hidden');
+        }, 2000);
+        
+        // Criar padrão de marcador personalizado (fallback)
+        // Nota: Em produção, você deve gerar um arquivo .patt usando ferramentas como AR.js Marker Training
+        // Para este exemplo, vamos usar detecção por barcode como alternativa
+        
+        // Evento quando o marcador é encontrado
+        const marker = document.querySelector('#markerA');
+        let markerFound = false;
+        
+        if (marker) {
+            marker.addEventListener('markerFound', () => {
+                markerFound = true;
+                statusEl.textContent = '✓ Marcador detetado!';
+                statusEl.classList.add('status-active');
+                instructionsEl.style.display = 'none';
                 
-                // Esconder instruções após 6 segundos
-                setTimeout(() => {
-                    instructionsEl.style.transition = 'opacity 0.5s';
-                    instructionsEl.style.opacity = '0';
-                    setTimeout(() => {
-                        instructionsEl.classList.add('hidden');
-                    }, 500);
-                }, 6000);
-            }
-        });
-
-        // Quando entrar no modo AR
-        modelViewer.addEventListener('ar-status', (event) => {
-            console.log('Status AR:', event.detail.status);
+                // Adicionar animação de entrada suave
+                const modelContainer = document.getElementById('model-container');
+                if (modelContainer) {
+                    modelContainer.setAttribute('animation', {
+                        property: 'scale',
+                        from: '0.1 0.1 0.1',
+                        to: '1 1 1',
+                        dur: 800,
+                        easing: 'easeOutElastic'
+                    });
+                }
+            });
             
-            if (event.detail.status === 'session-started') {
-                console.log('Sessão AR iniciada');
-                infoEl.classList.add('hidden');
-            } else if (event.detail.status === 'not-presenting') {
-                console.log('Sessão AR terminada');
-                infoEl.classList.remove('hidden');
-            } else if (event.detail.status === 'failed') {
-                showError('Falha ao iniciar AR. Verifique se tem a app Google Play Services for AR instalada e atualizada.');
-            }
-        });
-
-        // Erro ao carregar modelo
-        modelViewer.addEventListener('error', (event) => {
-            console.error('Erro ao carregar modelo:', event);
-            showError('Erro ao carregar o modelo 3D. Verifique se o ficheiro "solar.glb" existe na mesma pasta.');
-        });
-
-        // Controlo de rotação
-        rotateBtn.addEventListener('click', () => {
-            autoRotateEnabled = !autoRotateEnabled;
-            modelViewer.autoRotate = autoRotateEnabled;
-            rotateBtn.style.opacity = autoRotateEnabled ? '1' : '0.5';
-            rotateBtn.textContent = autoRotateEnabled ? '🔄' : '⏸️';
-        });
-
-        // Resetar vista
-        resetBtn.addEventListener('click', () => {
-            modelViewer.resetTurntableRotation();
-            modelViewer.interpolationDecay = 100;
-        });
-
-        // Logging para debug
-        modelViewer.addEventListener('camera-change', () => {
-            console.log('Câmara alterada');
-        });
-
-        // Verificação inicial
-        window.addEventListener('load', () => {
-            console.log('Página carregada');
-            console.log('ARCore disponível:', modelViewer.canActivateAR);
-            console.log('Modos AR suportados:', modelViewer.availableArModes);
-        });
-
-        // Gestão de erros globais
-        window.addEventListener('error', (e) => {
-            console.error('Erro global:', e.error);
-        });
+            marker.addEventListener('markerLost', () => {
+                markerFound = false;
+                statusEl.textContent = 'Procurando marcador...';
+                statusEl.classList.remove('status-active');
+                instructionsEl.style.display = 'block';
+            });
+        }
+        
+        // Configuração alternativa usando barcode (se o padrão não funcionar)
+        // Substitua o a-marker acima por:
+        // <a-marker type="barcode" value="6">
+        
+        // Log de debug
+        console.log('AR.js inicializado');
+        console.log('Procure pelo marcador solar.jpg ou use um QR code como alternativa');
+        
+        // Verificar permissões de câmara
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                console.log('Câmara autorizada');
+                stream.getTracks().forEach(track => track.stop());
+            })
+            .catch(err => {
+                console.error('Erro ao aceder à câmara:', err);
+                statusEl.textContent = '❌ Erro: Permita o acesso à câmara';
+                statusEl.style.background = 'rgba(150, 0, 0, 0.8)';
+            });
     </script>
 </body>
 </html>
