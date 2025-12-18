@@ -64,7 +64,7 @@
     
     .instructions {
       position: absolute;
-      bottom: 100px;
+      bottom: 20px;
       left: 20px;
       right: 20px;
       background: rgba(0,0,0,0.7);
@@ -86,36 +86,6 @@
     
     .instructions li {
       margin: 5px 0;
-    }
-    
-    .button-container {
-      position: absolute;
-      bottom: 20px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      z-index: 10;
-    }
-    
-    .download-btn {
-      background: white;
-      color: #1a1a1a;
-      padding: 15px 30px;
-      border: none;
-      border-radius: 25px;
-      font-weight: bold;
-      font-size: 16px;
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-      transition: background 0.3s;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    .download-btn:hover {
-      background: #f3f4f6;
     }
     
     .error {
@@ -158,101 +128,18 @@
   <div class="instructions">
     <h3>Como usar:</h3>
     <ol>
-      <li>Clique em "Baixar Imagem Alvo" e imprima ou exiba em outro dispositivo</li>
+      <li>Certifique-se que o arquivo "solar.mind" está na mesma pasta que este HTML</li>
       <li>Permita o acesso à câmera quando solicitado</li>
-      <li>Aponte a câmera para a imagem alvo</li>
+      <li>Aponte a câmera para a imagem solar.jpg</li>
       <li>Veja o modelo 3D aparecer sobre a imagem!</li>
     </ol>
-  </div>
-  
-  <div class="button-container">
-    <button class="download-btn" onclick="downloadTarget()">
-      <svg class="camera-icon" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/>
-        <line x1="12" y1="15" x2="12" y2="3"/>
-      </svg>
-      Baixar Imagem Alvo
-    </button>
   </div>
 
   <script>
     let mindarThree;
     let scene, camera, renderer, anchor, clock;
     
-    // Criar imagem alvo
-    function createTargetImage() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext('2d');
-      
-      // Fundo branco
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, 512, 512);
-      
-      // Desenhar padrão único para tracking
-      ctx.fillStyle = '#000000';
-      
-      // Quadrado externo
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 20;
-      ctx.strokeRect(50, 50, 412, 412);
-      
-      // Círculo central
-      ctx.beginPath();
-      ctx.arc(256, 256, 80, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Triângulos nos cantos
-      ctx.beginPath();
-      ctx.moveTo(100, 100);
-      ctx.lineTo(150, 100);
-      ctx.lineTo(100, 150);
-      ctx.closePath();
-      ctx.fill();
-      
-      ctx.beginPath();
-      ctx.moveTo(412, 100);
-      ctx.lineTo(362, 100);
-      ctx.lineTo(412, 150);
-      ctx.closePath();
-      ctx.fill();
-      
-      ctx.beginPath();
-      ctx.moveTo(100, 412);
-      ctx.lineTo(150, 412);
-      ctx.lineTo(100, 362);
-      ctx.closePath();
-      ctx.fill();
-      
-      ctx.beginPath();
-      ctx.moveTo(412, 412);
-      ctx.lineTo(362, 412);
-      ctx.lineTo(412, 362);
-      ctx.closePath();
-      ctx.fill();
-      
-      // Texto
-      ctx.font = 'bold 48px Arial';
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.fillText('AR', 256, 270);
-      
-      return canvas.toDataURL();
-    }
-    
-    // Baixar imagem alvo
-    function downloadTarget() {
-      const dataUrl = createTargetImage();
-      const link = document.createElement('a');
-      link.download = 'ar-target.png';
-      link.href = dataUrl;
-      link.click();
-    }
-    
-    // Atualizar status
-    function updateStatus(text, detected = false) {
+    function updateStatus(text, detected) {
       const statusEl = document.getElementById('status');
       statusEl.textContent = text;
       if (detected) {
@@ -262,7 +149,6 @@
       }
     }
     
-    // Mostrar erro
     function showError(message) {
       const errorEl = document.getElementById('error');
       errorEl.textContent = message;
@@ -270,13 +156,11 @@
       updateStatus('Erro');
     }
     
-    // Inicializar AR
     async function initAR() {
       try {
         updateStatus('Carregando bibliotecas...');
         
-        // Aguardar carregamento das bibliotecas
-        await new Promise(resolve => {
+        await new Promise(function(resolve) {
           if (window.MINDAR && window.THREE) {
             resolve();
           } else {
@@ -286,20 +170,17 @@
         
         updateStatus('Iniciando câmera...');
         
-        const { MindARThree } = window.MINDAR.IMAGE;
+        const MindARThree = window.MINDAR.IMAGE.MindARThree;
         
-        // Inicializar MindAR
         mindarThree = new MindARThree({
           container: document.getElementById('container'),
-          imageTargetSrc: createTargetImage(),
+          imageTargetSrc: 'solar.mind',
         });
         
-        const { renderer: rend, scene: scn, camera: cam } = mindarThree;
-        renderer = rend;
-        scene = scn;
-        camera = cam;
+        renderer = mindarThree.renderer;
+        scene = mindarThree.scene;
+        camera = mindarThree.camera;
         
-        // Adicionar luz
         const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
         scene.add(light);
         
@@ -307,10 +188,8 @@
         directionalLight.position.set(0, 5, 5);
         scene.add(directionalLight);
         
-        // Criar âncora para o modelo 3D
         anchor = mindarThree.addAnchor(0);
         
-        // Criar um cubo colorido animado
         const geometry = new THREE.BoxGeometry(1, 1, 1);
         const material = new THREE.MeshPhongMaterial({
           color: 0x00ff00,
@@ -320,7 +199,6 @@
         cube.position.set(0, 0, 0);
         cube.scale.set(0.5, 0.5, 0.5);
         
-        // Adicionar arestas ao cubo
         const edges = new THREE.EdgesGeometry(geometry);
         const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
         const wireframe = new THREE.LineSegments(edges, lineMaterial);
@@ -328,7 +206,6 @@
         
         anchor.group.add(cube);
         
-        // Adicionar esfera que orbita
         const sphereGeometry = new THREE.SphereGeometry(0.15, 32, 32);
         const sphereMaterial = new THREE.MeshPhongMaterial({
           color: 0xff0000,
@@ -338,7 +215,6 @@
         sphere.position.set(0.8, 0, 0);
         anchor.group.add(sphere);
         
-        // Adicionar cone amarelo
         const coneGeometry = new THREE.ConeGeometry(0.2, 0.5, 32);
         const coneMaterial = new THREE.MeshPhongMaterial({
           color: 0xffff00,
@@ -350,34 +226,28 @@
         
         clock = new THREE.Clock();
         
-        // Eventos de detecção
-        anchor.onTargetFound = () => {
-          updateStatus('✓ Imagem detectada!', true);
+        anchor.onTargetFound = function() {
+          updateStatus('Imagem detectada!', true);
         };
         
-        anchor.onTargetLost = () => {
-          updateStatus('Procurando imagem...');
+        anchor.onTargetLost = function() {
+          updateStatus('Procurando imagem...', false);
         };
         
-        // Iniciar AR
         await mindarThree.start();
         updateStatus('Aponte a câmera para a imagem alvo');
         
-        // Loop de animação
-        renderer.setAnimationLoop(() => {
+        renderer.setAnimationLoop(function() {
           const delta = clock.getDelta();
           const elapsed = clock.getElapsedTime();
           
-          // Animar cubo
           cube.rotation.x = elapsed * 0.5;
           cube.rotation.y = elapsed * 0.7;
           
-          // Animar esfera orbitando
           sphere.position.x = Math.cos(elapsed * 2) * 0.8;
           sphere.position.z = Math.sin(elapsed * 2) * 0.8;
           sphere.position.y = Math.sin(elapsed * 3) * 0.3;
           
-          // Animar cone
           cone.rotation.y = elapsed * 2;
           cone.position.y = 0.8 + Math.sin(elapsed * 2) * 0.2;
           
@@ -390,7 +260,6 @@
       }
     }
     
-    // Iniciar quando a página carregar
     window.addEventListener('load', initAR);
   </script>
 </body>
